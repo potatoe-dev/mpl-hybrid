@@ -26,14 +26,13 @@ pub struct ReleaseV1Ctx<'info> {
     authority: Signer<'info>,
 
     #[account(
-        mut,
         seeds = [
             "escrow".as_bytes(), 
             collection.key().as_ref()
             ],
         bump=escrow.bump
     )]
-    escrow: Account<'info, EscrowV1>,
+    escrow: Box<Account<'info, EscrowV1>>,
 
     /// CHECK: We check the asset bellow
     #[account(mut)]
@@ -50,26 +49,26 @@ pub struct ReleaseV1Ctx<'info> {
         associated_token::mint = token,
         associated_token::authority = owner
     )]
-    user_token_account: Account<'info, TokenAccount>,
+    user_token_account: Box<Account<'info, TokenAccount>>,
 
-    #[account(init_if_needed,
-        payer = owner,
+    #[account(
+        mut,
         associated_token::mint = token,
         associated_token::authority = escrow
     )]
-    escrow_token_account: Account<'info, TokenAccount>,
+    escrow_token_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: This is a user defined account
     #[account(
         address = escrow.token @MplHybridError::InvalidMintAccount
     )]
-    token: Account<'info, Mint>,
+    token: Box<Account<'info, Mint>>,
 
-    #[account(init_if_needed,
-        payer = owner,
+    #[account(
+        mut,
         associated_token::mint = token,
         associated_token::authority = fee_project_account)]
-    fee_token_account: Account<'info, TokenAccount>,
+    fee_token_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: We check against constant
     #[account(mut,
@@ -96,7 +95,7 @@ pub struct ReleaseV1Ctx<'info> {
     mpl_core: AccountInfo<'info>,
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,
-    associated_token_program: Program<'info, AssociatedToken>,
+    associated_token_program: Program<'info, AssociatedToken>
 }
 
 pub fn handler_release_v1(ctx: Context<ReleaseV1Ctx>) -> Result<()> {
