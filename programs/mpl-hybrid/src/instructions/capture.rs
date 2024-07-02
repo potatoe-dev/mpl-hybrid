@@ -27,6 +27,7 @@ pub struct CaptureV1Ctx<'info> {
     authority: Signer<'info>,
 
     #[account(
+        mut,
         seeds = [
             "escrow".as_bytes(), 
             collection.key().as_ref()
@@ -132,8 +133,7 @@ pub fn handler_capture_v1(ctx: Context<CaptureV1Ctx>) -> Result<()> {
     if Path::RerollMetadata.check(escrow.path) {
         let clock = Clock::get()?;
         // seed for the random number is a combination of the slot_hash - timestamp
-        let seed = u64::from_le_bytes(*most_recent).saturating_sub(clock.unix_timestamp as u64)
-            * escrow.count;
+        let seed = u64::from_le_bytes(*most_recent).saturating_sub(clock.unix_timestamp as u64).wrapping_mul(escrow.count as u64);
         // remainder is the random number between the min and max
         let remainder = seed
             .checked_rem(escrow.max - escrow.min)
